@@ -5,7 +5,7 @@
 
 from database import db
 from app import app
-from models import Reporte, User  # Importa todos los modelos necesarios
+from models import  User, Customer, Terminal, FuelType, Transaction  # Importa todos los modelos necesarios
 
 # Crear las tablas en la base de datos
 with app.app_context():

@@ -1,7 +1,7 @@
 from flask import Blueprint, send_file, make_response, request, jsonify, render_template, current_app, Response # Blueprint para modularizar y relacionar con app
 from flask_bcrypt import Bcrypt                                  # Bcrypt para encriptación
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity   # Jwt para tokens
-from models import User                                          # importar tabla "User" de models
+from models import User, Customer                                  # importar tabla "User" de models
 from database import db                                          # importa la db desde database.py
 from datetime import timedelta                                   # importa tiempo especifico para rendimiento de token válido
 from logging_config import logger                                # logger.info("console log que se ve en render")
@@ -56,204 +56,200 @@ def test():
 def show_hello_world():
          return render_template('instructions.html')
 
-# RUTAS DE ADMINISTRACIÓN DE USUARIOS Y ADMINS ---------------------------------------------------------------
-
-    # RUTA CREAR USUARIO
+# CREAR USUARIO
 @admin_bp.route('/create_user', methods=['POST'])
 def create_user():
     try:
         email = request.json.get('email')
         password = request.json.get('password')
         name = request.json.get('name')
-        dni = request.json.get('dni')
+        curp = request.json.get('curp')  # Campo requerido
+        first_pass = request.json.get('first_pass')  # Nuevo campo
+
+        # Validar campos requeridos
+        if not email or not password or not name or not curp:
+            return jsonify({'error': 'Email, password, name y curp son requeridos.'}), 400
+
+        # Verificar si el email ya existe
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'El email ya existe.'}), 409
+
+        # Comprobar la clave especial de admin desde el .env
+        admin_key = os.getenv('ADMIN_FIRST_PASS_KEY')
         admin = False
-        url_image = "base"
-        # Después de crear el primer administrador y la consola de agregar y quitar admins borrar este pedazo:
+        if first_pass and first_pass == admin_key:
+            admin = True
 
-        #-----------------------------------------------------------------------------------------------------
-        if not email or not password or not name or not dni:
-            return jsonify({'error': 'Email, password, dni and Name are required.'}), 400
-
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            return jsonify({'error': 'Email already exists.'}), 409
-
+        # Generar el hash de la contraseña
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-
-        # Ensamblamos el usuario nuevo
-        new_user = User(email=email, password=password_hash, name=name , dni=dni, admin=admin, url_image= url_image)
+        # Crear el nuevo usuario
+        new_user = User(
+            email=email,
+            password_hash=password_hash,
+            name=name,
+            curp=curp,
+            admin=admin
+        )
 
         db.session.add(new_user)
         db.session.commit()
 
-        good_to_share_to_user = {
-            'name':new_user.name,
-            'email':new_user.email,
-            'dni':new_user.dni,
-            'admin':new_user.admin,
-            'url_image':new_user.url_image
-        }
-
-        return jsonify({'message': 'User created successfully.','user_created':good_to_share_to_user}), 201
+        return jsonify({
+            'message': 'Usuario creado con éxito.',
+            'user_created': {
+                'id': new_user.id,
+                'name': new_user.name,
+                'email': new_user.email,
+                'curp': new_user.curp,
+                'admin': new_user.admin
+            }
+        }), 201
 
     except Exception as e:
-        return jsonify({'error': 'Error in user creation: ' + str(e)}), 500
+        db.session.rollback()
+        return jsonify({'error': 'Error en la creación del usuario: ' + str(e)}), 500
 
-
-    #RUTA LOG-IN ( CON TOKEN DE RESPUESTA )
+# LOGIN (CON TOKEN)
 @admin_bp.route('/login', methods=['POST'])
 def get_token():
     try:
-        #  Primero chequeamos que por el body venga la info necesaria:
         email = request.json.get('email')
         password = request.json.get('password')
 
         if not email or not password:
             return jsonify({'error': 'Email y password son requeridos.'}), 400
-        
-        # Buscamos al usuario con ese correo electronico ( si lo encuentra lo guarda ):
-        login_user = User.query.filter_by(email=request.json['email']).one()
 
-        # Verificamos que el password sea correcto:
-        password_from_db = login_user.password #  Si loguin_user está vacio, da error y se va al "Except".
-        true_o_false = bcrypt.check_password_hash(password_from_db, password)
-        
-        # Si es verdadero generamos un token y lo devuelve en una respuesta JSON:
-        if true_o_false:
-            expires = timedelta(minutes=30)  # pueden ser "hours", "minutes", "days","seconds"
+        login_user = User.query.filter_by(email=email).one()  # Si no se encuentra, lanza excepción
 
-            user_dni = login_user.dni       # recuperamos el id del usuario para crear el token...
-            access_token = create_access_token(identity=user_dni, expires_delta=expires)   # creamos el token con tiempo vencimiento
-            return jsonify({ 'access_token':access_token, 'name':login_user.name, 'admin':login_user.admin, 'dni':user_dni, 'email':login_user.email, 'url_image':login_user.url_image}), 200  # Enviamos el token al front ( si es necesario serializamos el "login_user" y tambien lo enviamos en el objeto json )
-
+        if bcrypt.check_password_hash(login_user.password_hash, password):
+            expires = timedelta(minutes=30)
+            # Usamos el id del usuario (UUID) como identity para el token
+            access_token = create_access_token(identity=login_user.id, expires_delta=expires)
+            return jsonify({
+                'access_token': access_token,
+                'id': login_user.id,
+                'name': login_user.name,
+                'curp': login_user.curp,
+                'email': login_user.email,
+                'admin': login_user.admin
+            }), 200
         else:
-            return {"Error":"Contraseña  incorrecta"}
-    
-    except Exception as e:
-        return {"Error":"El email proporcionado no corresponde a ninguno registrado: " + str(e)}, 500
-    
+            return jsonify({"error": "Contraseña incorrecta"}), 401
 
-    # EJEMPLO DE RUTA RESTRINGIDA POR TOKEN. ( LA MISMA RECUPERA TODOS LOS USERS Y LO ENVIA PARA QUIEN ESTÉ LOGUEADO )
-@admin_bp.route('/users')
-@jwt_required()  # Decorador para requerir autenticación con JWT
+    except Exception as e:
+        return jsonify({"error": "El email proporcionado no corresponde a ninguno registrado: " + str(e)}), 500
+
+# MOSTRAR TODOS LOS USUARIOS (ruta protegida con JWT)
+@admin_bp.route('/users', methods=['GET'])
+@jwt_required()
 def show_users():
-    current_user_dni = get_jwt_identity()  # Obtiene la id del usuario del token
-    if current_user_dni:
+    try:
+        current_user_id = get_jwt_identity()  # Ahora este valor es el id (UUID)
+        # Opcionalmente, se puede verificar que el usuario del token sea admin
         users = User.query.all()
         user_list = []
         for user in users:
-            user_dict = {
-                'dni': user.dni,
-                'email': user.email,
+            user_list.append({
+                'id': user.id,
                 'name': user.name,
-                'admin': user.admin,
-                'url_image': user.url_image
-            }
-            user_list.append(user_dict)
-        return jsonify({"lista_usuarios":user_list , 'cantidad':len(user_list)}), 200
-    else:
-        return {"Error": "Token inválido o vencido"}, 401
+                'curp': user.curp,
+                'email': user.email,
+                'admin': user.admin
+            })
+        return jsonify({"lista_usuarios": user_list, 'cantidad': len(user_list)}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    # ACTUALIZAR PERFIL
+# ACTUALIZAR PERFIL (ruta opcional, no utiliza token en este ejemplo)
 @admin_bp.route('/update_profile', methods=['PUT'])
-def update():
-    email = request.json.get('email')
-    password = request.json.get('password')
-    name = request.json.get('name')
-    dni = request.json.get('dni')
-    url_image = "base"
-
-
-    # Verificar que todos los campos requeridos estén presentes
-    if not email or not password or not name or not dni or not url_image:
-        return jsonify({"error": "Todos los campos son obligatorios"}), 400
-
-    # Buscar al usuario por email
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        return jsonify({"error": "Usuario no encontrado"}), 404
-
-    # Actualizar los datos del usuario
-    user.name = name
-    user.dni = dni
-    user.password = bcrypt.generate_password_hash(password)  # Asegúrate de hash la contraseña antes de guardarla
-    user.url_image = url_image
-
+def update_profile():
     try:
+        email = request.json.get('email')
+        password = request.json.get('password')
+        name = request.json.get('name')
+        curp = request.json.get('curp')
+
+        if not email or not password or not name or not curp:
+            return jsonify({"error": "Email, password, name y curp son obligatorios"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+
+        user.name = name
+        user.curp = curp
+        user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         db.session.commit()
         return jsonify({"message": "Usuario actualizado con éxito"}), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al actualizar el usuario: {str(e)}"}), 500
-    
 
-    # ACTUALIZAR IMAGEN DE PERFIL
-@admin_bp.route('/update_profile_image', methods=['PUT'])
-def update_profile_image():
-    email = request.json.get('email')
-    url_image = request.json.get('url_image')
-
-    # Verificar que ambos campos estén presentes
-    if not email or not url_image:
-        return jsonify({"error": "El email y la URL de la imagen son obligatorios"}), 400
-
-    # Buscar al usuario por email
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        return jsonify({"error": "Usuario no encontrado"}), 404
-
-    # Actualizar solo la URL de la imagen
-    user.url_image = url_image
-
-    try:
-        db.session.commit()
-        return jsonify({"message": "Imagen de perfil actualizada con éxito"}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Error al actualizar la imagen: {str(e)}"}), 500
-    
-    # ACTUALIZAR CONDICIÓN DE ADMIN
+ 
+# RUTA PARA ACTUALIZAR EL ESTADO ADMIN DE UN USUARIO
 @admin_bp.route('/update_admin', methods=['PUT'])
 def update_admin():
     email = request.json.get('email')
-    admin = request.json.get('admin')
-
-    # Verificar que ambos campos estén presentes
-    if email is None or admin is None:
+    admin_value = request.json.get('admin')  # Aunque no se utiliza, se valida que venga
+    if email is None or admin_value is None:
         return jsonify({"error": "El email y la situación admin son obligatorios"}), 400
 
-    # Buscar al usuario por email
     user = User.query.filter_by(email=email).first()
-
     if not user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    # Actualizar estado admin
+    # Togleamos (invertimos) el estado actual
     user.admin = not user.admin
 
     try:
         db.session.commit()
-        return jsonify({"message": f"Estado admin de {email} ahora es {'admin' if user.admin else 'no admin'}", "admin": user.admin}), 200
+        return jsonify({
+            "message": f"Estado admin de {email} ahora es {'admin' if user.admin else 'no admin'}",
+            "admin": user.admin
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al actualizar el estado admin: {str(e)}"}), 500
-    
-    # OBTENER USUARIO POR SU DNI
-@admin_bp.route('/get_user/<int:dni>', methods=['GET'])
-def get_user(dni):
+
+
+# RUTA PARA OBTENER UN CUSTOMER POR SU CURP
+@admin_bp.route('/get_user/<string:curp>', methods=['GET'])
+def get_user(curp):
     try:
-        
-        login_user = User.query.filter_by(dni=dni).one()
-
-        if login_user:
-            return jsonify({'name':login_user.name, 'admin':login_user.admin, 'dni':login_user.dni, 'email':login_user.email, 'url_image':login_user.url_image}), 200 
-
+        # Buscamos al Customer por su curp (recordá que es un string)
+        customer = Customer.query.filter_by(curp=curp).one()
+        if customer:
+            customer_data = {
+                'id': customer.id,
+                'name': customer.name,
+                'lastname_f': customer.lastname_f,
+                'lastname_m': customer.lastname_m,
+                'curp': customer.curp,
+                'entidad_nac': customer.entidad_nac,
+                'municipio_nac': customer.municipio_nac,
+                'org': customer.org,
+                'address_street': customer.address_street,
+                'address_number': customer.address_number,
+                'colonia': customer.colonia,
+                'postal_code': customer.postal_code,
+                'localidad': customer.localidad,
+                'entidad_dir': customer.entidad_dir,
+                'municipio_dir': customer.municipio_dir,
+                'email': customer.email,
+                'cell_num': customer.cell_num,
+                'instagram': customer.instagram,
+                'facebook': customer.facebook,
+                'tel_num': customer.tel_num,
+                'admin': customer.admin,
+                'comment': customer.comment,
+                'state': customer.state,
+                'created_at': customer.created_at.isoformat() if customer.created_at else None,
+                'updated_at': customer.updated_at.isoformat() if customer.updated_at else None,
+            }
+            return jsonify(customer_data), 200
         else:
-            return {"Error":"No se encontró un usuario con ese documento"}
-    
+            return jsonify({"error": "No se encontró un cliente con esa CURP"}), 404
     except Exception as e:
-        return {"Error":"El dni proporcionado no corresponde a ninguno registrado: " + str(e)}, 500
-    
+        return jsonify({"error": "El curp proporcionado no corresponde a ninguno registrado: " + str(e)}), 500

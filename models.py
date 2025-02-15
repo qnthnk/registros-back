@@ -1,33 +1,81 @@
 from database import db
 from datetime import datetime
+import uuid
 
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
+
+class Customer(db.Model):
+    __tablename__ = "customer"
+    id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    name = db.Column(db.String, nullable=True)
+    lastname_f = db.Column(db.String, nullable=True)
+    lastname_m = db.Column(db.String, nullable=True)
+    curp = db.Column(db.String, unique=True, nullable=False)  # Campo obligatorio
+    entidad_nac = db.Column(db.String, nullable=True)
+    municipio_nac = db.Column(db.String, nullable=True)
+    org = db.Column(db.String, nullable=True)
+    address_street = db.Column(db.String, nullable=True)
+    address_number = db.Column(db.String, nullable=True)
+    colonia = db.Column(db.String, nullable=True)
+    postal_code = db.Column(db.String, nullable=True)
+    localidad = db.Column(db.String, nullable=True)
+    entidad_dir = db.Column(db.String, nullable=True)
+    municipio_dir = db.Column(db.String, nullable=True)
+    email = db.Column(db.String, nullable=True)
+    cell_num = db.Column(db.String, nullable=True)
+    instagram = db.Column(db.String, nullable=True)
+    facebook = db.Column(db.String, nullable=True)
+    password_hash = db.Column(db.String, nullable=True)
+    url_image_self_photo = db.Column(db.String, nullable=True)
+    url_image_card_front = db.Column(db.String, nullable=True)
+    url_image_card_back = db.Column(db.String, nullable=True)
+    tel_num = db.Column(db.String, nullable=True)
+    admin = db.Column(db.Boolean, default=False)
+    comment = db.Column(db.String, nullable=True)
+    state = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
 class User(db.Model):
-    dni = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.Integer)
-    name = db.Column(db.String(50))
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(255))
-    url_image = db.Column(db.String(255))
-    admin = db.Column(db.Boolean)
+    __tablename__ = "user"
+    id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    name = db.Column(db.String, nullable=False)
+    lastname = db.Column(db.String, nullable=True)
+    curp = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
+    tel_num = db.Column(db.String, nullable=True)
+    cell_num = db.Column(db.String, nullable=True)
+    admin = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-class Reporte(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    report_url = db.Column(db.String(255), nullable=False)
-    data = db.Column(db.LargeBinary, nullable=False)
-    size = db.Column(db.Float, nullable=False)
-    elapsed_time = db.Column(db.String(50), nullable=True)
-    title = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow) # revisar si .UTC va o si cambiamos a .utcnow
+class Terminal(db.Model):
+    __tablename__ = "terminal"
+    id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    responsible_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=False)
+    address = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-class TodosLosReportes(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # Primary Key
-    report_url = db.Column(db.String(255), unique=True, nullable=False)  # La URL del reporte
-    title = db.Column(db.String(255), nullable=False)  # El título del reporte
-    size_megabytes = db.Column(db.Float, nullable=True)  # El tamaño del reporte en megabytes, puede ser NULL si no está disponible
-    created_at = db.Column(db.DateTime, nullable=True)  # La fecha de creación, puede ser NULL si no está disponible
+class FuelType(db.Model):
+    __tablename__ = "fuel_type"
+    id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    name = db.Column(db.String, unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
-class AllCommentsWithEvaluation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    archivo_binario = db.Column(db.LargeBinary)
+class Transaction(db.Model):
+    __tablename__ = "transaction"
+    id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    customer_id = db.Column(db.String, db.ForeignKey('customer.id'), nullable=False)
+    terminal_id = db.Column(db.String, db.ForeignKey('terminal.id'), nullable=False)
+    fuel_type_id = db.Column(db.String, db.ForeignKey('fuel_type.id'), nullable=False)
+    sales_person_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=False)
+    quantity_liters = db.Column(db.Float, nullable=False)
+    pay_amount = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())

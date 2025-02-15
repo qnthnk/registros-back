@@ -59,30 +59,27 @@ def cargar_usuarios_iniciales():
             {
                 "email": os.getenv('EMAIL1'),
                 "name": os.getenv('NAME1'),
-                "password": os.getenv('PASSWORD1'),
-                "dni": os.getenv('DNI1'),
-                "admin": os.getenv('ADMIN1') == 'True',
-                "url_image": os.getenv('URL_IMAGE1')
+                "password_hash": os.getenv('PASSWORD1'),
+                "curp": os.getenv('DNI1'),
+                "admin": os.getenv('ADMIN1') == 'True'
             },
             {
                 "email": os.getenv('EMAIL2'),
                 "name": os.getenv('NAME2'),
-                "password": os.getenv('PASSWORD2'),
-                "dni": os.getenv('DNI2'),
-                "admin": os.getenv('ADMIN2') == 'True',
-                "url_image": os.getenv('URL_IMAGE2')
+                "password_hash": os.getenv('PASSWORD2'),
+                "curp": os.getenv('DNI2'),
+                "admin": os.getenv('ADMIN2') == 'True'
             }
         ]
 
         for usuario in usuarios_iniciales:
-            password_hash = bcrypt.generate_password_hash(usuario['password']).decode('utf-8')
+            password_hash = bcrypt.generate_password_hash(usuario['password_hash']).decode('utf-8')
             new_user = User(
                 email=usuario['email'],
                 name=usuario['name'],
-                password=password_hash,
-                dni=usuario['dni'],
-                admin=usuario['admin'],
-                url_image=usuario['url_image']
+                password_hash=password_hash,
+                curp=usuario['curp'],
+                admin=usuario['admin']
             )
             db.session.add(new_user)
 
