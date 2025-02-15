@@ -50,8 +50,10 @@ class User(db.Model):
     tel_num = db.Column(db.String, nullable=True)
     cell_num = db.Column(db.String, nullable=True)
     admin = db.Column(db.Boolean, default=False)
+    terminal_id = db.Column(db.String, db.ForeignKey('terminal.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
 
 class Terminal(db.Model):
     __tablename__ = "terminal"

@@ -55,6 +55,7 @@ def create_customer_minimal():
         data = request.json
         curp = data.get('curp')
         admin = data.get('admin')
+        terminal_id = data.get('terminal_id')
 
         if not curp or not admin:
             return jsonify({"error": "El campo 'curp' es obligatorio. Y además tenes que ser admin"}), 400

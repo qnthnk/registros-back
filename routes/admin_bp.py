@@ -1,7 +1,7 @@
 from flask import Blueprint, send_file, make_response, request, jsonify, render_template, current_app, Response # Blueprint para modularizar y relacionar con app
 from flask_bcrypt import Bcrypt                                  # Bcrypt para encriptación
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity   # Jwt para tokens
-from models import User, Customer                                  # importar tabla "User" de models
+from models import User, Terminal                                  # importar tabla "User" de models
 from database import db                                          # importa la db desde database.py
 from datetime import timedelta                                   # importa tiempo especifico para rendimiento de token válido
 from logging_config import logger                                # logger.info("console log que se ve en render")
@@ -64,7 +64,8 @@ def create_user():
         password = request.json.get('password')
         name = request.json.get('name')
         curp = request.json.get('curp')  # Campo requerido
-        first_pass = request.json.get('first_pass')  # Nuevo campo
+        terminal_id = request.json.get('terminal_id')  # Opcional
+        first_pass = request.json.get('first_pass')  # Nuevo campo opcional
 
         # Validar campos requeridos
         if not email or not password or not name or not curp:
@@ -73,6 +74,12 @@ def create_user():
         # Verificar si el email ya existe
         if User.query.filter_by(email=email).first():
             return jsonify({'error': 'El email ya existe.'}), 409
+
+        # Validar la existencia del terminal_id. Si no existe, lo dejamos como None.
+        if terminal_id:
+            terminal = Terminal.query.filter_by(id=terminal_id).first()
+            if not terminal:
+                terminal_id = None
 
         # Comprobar la clave especial de admin desde el .env
         admin_key = os.getenv('ADMIN_FIRST_PASS_KEY')
@@ -89,7 +96,8 @@ def create_user():
             password_hash=password_hash,
             name=name,
             curp=curp,
-            admin=admin
+            admin=admin,
+            terminal_id=terminal_id  # Se asigna el terminal_id si existe, o None en caso contrario.
         )
 
         db.session.add(new_user)
@@ -102,7 +110,8 @@ def create_user():
                 'name': new_user.name,
                 'email': new_user.email,
                 'curp': new_user.curp,
-                'admin': new_user.admin
+                'admin': new_user.admin,
+                'terminal_id': new_user.terminal_id
             }
         }), 201
 
@@ -169,9 +178,16 @@ def update_profile():
         password = request.json.get('password')
         name = request.json.get('name')
         curp = request.json.get('curp')
+        terminal_id = request.json.get('terminal_id')  # Opcional
 
         if not email or not password or not name or not curp:
             return jsonify({"error": "Email, password, name y curp son obligatorios"}), 400
+        
+        # Validar la existencia del terminal_id. Si no existe, lo dejamos como None.
+        if terminal_id:
+            terminal = Terminal.query.filter_by(id=terminal_id).first()
+            if not terminal:
+                terminal_id = None
 
         user = User.query.filter_by(email=email).first()
         if not user:
@@ -179,6 +195,7 @@ def update_profile():
 
         user.name = name
         user.curp = curp
+        user.terminal_id = terminal_id
         user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         db.session.commit()
         return jsonify({"message": "Usuario actualizado con éxito"}), 200

@@ -7,6 +7,7 @@ from routes.admin_bp import admin_bp                       # Acá importamos rut
 from routes.public_bp import public_bp                     # Acá importamos rutas public
 from routes.costumer_bp import customer_bp
 from routes.clasifica_comentarios_individuales_bp import clasifica_comentarios_individuales_bp
+from routes.terminal_bp import terminal_bp
 from database import db                             # Acá importamos la base de datos inicializada
 from flask_cors import CORS                         # Permisos de consumo
 from extensions import init_extensions              # Necesario para que funcione el executor en varios archivos en simultaneo
@@ -40,6 +41,8 @@ app.register_blueprint(public_bp, url_prefix='/public')  # blueprint public_bp
 app.register_blueprint(clasifica_comentarios_individuales_bp, url_prefix='/') # contiene ejemplos de executor y openai
 
 app.register_blueprint(customer_bp, url_prefix='/')
+
+app.register_blueprint(terminal_bp,url_prefix='/')
 
 
 # DATABASE---------------
