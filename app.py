@@ -12,7 +12,7 @@ from routes.transactions_bp import transactions_bp
 from database import db                             # Acá importamos la base de datos inicializada
 from flask_cors import CORS                         # Permisos de consumo
 from extensions import init_extensions              # Necesario para que funcione el executor en varios archivos en simultaneo
-from models import User                             # Importamos el modelo para TodosLosReportes
+from models import User, Terminal, Customer                           # Importamos el modelo para TodosLosReportes
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -61,44 +61,79 @@ if not os.path.exists(os.path.dirname(db_path)): # Nos aseguramos que se cree ca
 
 
 
-# Función para cargar los usuarios iniciales ( si necesitase )
-def cargar_usuarios_iniciales():
-    if User.query.count() == 0:  # Verificamos si la tabla User está vacía
-        usuarios_iniciales = [
-            {
-                "email": os.getenv('EMAIL1'),
-                "name": os.getenv('NAME1'),
-                "password_hash": os.getenv('PASSWORD1'),
-                "curp": os.getenv('DNI1'),
-                "admin": os.getenv('ADMIN1') == 'True'
-            },
-            {
-                "email": os.getenv('EMAIL2'),
-                "name": os.getenv('NAME2'),
-                "password_hash": os.getenv('PASSWORD2'),
-                "curp": os.getenv('DNI2'),
-                "admin": os.getenv('ADMIN2') == 'True'
-            }
-        ]
+def cargar_datos_iniciales():
+    # 1. Si no hay usuarios, crear el usuario responsable, la terminal y un usuario asociado a ella
+    if User.query.count() == 0:
+        # Crear el usuario responsable (sin terminal asignada)
+        responsable_email = os.getenv('RESPONSABLE_EMAIL', 'responsable@example.com')
+        responsable_name = os.getenv('RESPONSABLE_NAME', 'Responsable')
+        responsable_password = os.getenv('RESPONSABLE_PASSWORD', '12345678')
+        responsable_curp = os.getenv('RESPONSABLE_CURP', 'RESPONSABLECURP')
+        responsable_admin = os.getenv('RESPONSABLE_ADMIN', 'True') == 'True'
 
-        for usuario in usuarios_iniciales:
-            password_hash = bcrypt.generate_password_hash(usuario['password_hash']).decode('utf-8')
-            new_user = User(
-                email=usuario['email'],
-                name=usuario['name'],
-                password_hash=password_hash,
-                curp=usuario['curp'],
-                admin=usuario['admin']
-            )
-            db.session.add(new_user)
+        password_hash = bcrypt.generate_password_hash(responsable_password).decode('utf-8')
+        responsable = User(
+            email=responsable_email,
+            name=responsable_name,
+            password_hash=password_hash,
+            curp=responsable_curp,
+            admin=responsable_admin,
+            terminal_id=None  # Aún no tiene terminal asignada
+        )
+        db.session.add(responsable)
+        db.session.commit()  # Commit para obtener el id del usuario
 
+        # Crear una Terminal usando el id del usuario responsable
+        terminal_address = os.getenv('TERMINAL_ADDRESS', 'Dirección de Terminal por defecto')
+        nueva_terminal = Terminal(
+            responsible_id=responsable.id,
+            address=terminal_address
+        )
+        db.session.add(nueva_terminal)
+        db.session.commit()  # Commit para obtener el id de la terminal
+
+        # Crear un usuario asociado a la terminal recién creada
+        usuario_email = os.getenv('TERMINAL_USER_EMAIL', 'terminaluser@example.com')
+        usuario_name = os.getenv('TERMINAL_USER_NAME', 'Usuario Terminal')
+        usuario_password = os.getenv('TERMINAL_USER_PASSWORD', '12345678')
+        usuario_curp = os.getenv('TERMINAL_USER_CURP', 'TERMINALUSERCURP')
+        usuario_admin = os.getenv('TERMINAL_USER_ADMIN', 'False') == 'True'
+
+        password_hash_terminal = bcrypt.generate_password_hash(usuario_password).decode('utf-8')
+        usuario_terminal = User(
+            email=usuario_email,
+            name=usuario_name,
+            password_hash=password_hash_terminal,
+            curp=usuario_curp,
+            admin=usuario_admin,
+            terminal_id=nueva_terminal.id
+        )
+        db.session.add(usuario_terminal)
         db.session.commit()
-        print("Usuarios iniciales cargados correctamente.")
+
+        print("Datos iniciales cargados: Usuario responsable, Terminal y usuario asociado a la terminal creados.")
+
+    # 2. Crear un Customer si no existe ninguno
+    if Customer.query.count() == 0:
+        customer_name = os.getenv('CUSTOMER_NAME', 'Cliente Ejemplo')
+        customer_email = os.getenv('CUSTOMER_EMAIL', 'cliente@test.com')
+        # El curp del customer debe ser SGSO750909HDFNNS05 sí o sí
+        customer_curp = os.getenv('CUSTOMER_CURP', 'SGSO750909HDFNNS05')
+
+        nuevo_customer = Customer(
+            name=customer_name,
+            email=customer_email,
+            curp=customer_curp
+        )
+        db.session.add(nuevo_customer)
+        db.session.commit()
+
+        print("Customer inicial cargado correctamente.")
 
 with app.app_context():
     db.init_app(app)
     db.create_all() # Nos aseguramos que este corriendo en el contexto del proyecto.
-    cargar_usuarios_iniciales()
+    cargar_datos_iniciales()
 # -----------------------
 
 # AL FINAL ( detecta que encendimos el servidor desde terminal y nos da detalles de los errores )
