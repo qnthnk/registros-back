@@ -132,7 +132,7 @@ def get_token():
         login_user = User.query.filter_by(email=email).one()  # Si no se encuentra, lanza excepción
 
         if bcrypt.check_password_hash(login_user.password_hash, password):
-            expires = timedelta(minutes=30)
+            expires = timedelta(hours=9)
             # Usamos el id del usuario (UUID) como identity para el token
             access_token = create_access_token(identity=login_user.id, expires_delta=expires)
             return jsonify({
