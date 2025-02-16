@@ -55,7 +55,6 @@ def create_customer_minimal():
         data = request.json
         curp = data.get('curp')
         admin = data.get('admin')
-        terminal_id = data.get('terminal_id')
 
         if not curp or not admin:
             return jsonify({"error": "El campo 'curp' es obligatorio. Y además tenes que ser admin"}), 400
@@ -222,7 +221,7 @@ def check_customer():
         # Buscar un Customer existente con ese curp
         customer = Customer.query.filter_by(curp=curp).first()
         if not customer:
-            return jsonify({"error": "No existe un Customer con ese curp. Registro no permitido."}), 404
+            return jsonify({"error": "No existe un Customer con ese curp. Venta no permitida."}), 404
 
         # Generar token con el id del customer
         expires = timedelta(minutes=60)

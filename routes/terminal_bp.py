@@ -46,6 +46,7 @@ def authorize():
 @terminal_bp.route('/test_terminal_bp', methods=['GET'])
 def test():
     return jsonify({'message': 'test bien sucedido','status':"Si lees esto, rutas de terminal funcionan bien..."}),200
+
 # Ruta para crear una nueva Terminal
 @terminal_bp.route('/terminal_bp', methods=['POST'])
 @jwt_required()

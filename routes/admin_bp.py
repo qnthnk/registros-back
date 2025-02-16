@@ -141,7 +141,8 @@ def get_token():
                 'name': login_user.name,
                 'curp': login_user.curp,
                 'email': login_user.email,
-                'admin': login_user.admin
+                'admin': login_user.admin,
+                'terminal_id': login_user.terminal_id
             }), 200
         else:
             return jsonify({"error": "Contraseña incorrecta"}), 401
