@@ -210,7 +210,6 @@ def create_customer_full():
 
 # RUTA PARA OBTENER UN CUSTOMER POR SU CURP
 @customer_bp.route('/get_customer/<string:curp>', methods=['GET'])
-@jwt_required()
 def get_user(curp):
     try:
         # Buscamos al Customer por su curp (recordá que es un string)
