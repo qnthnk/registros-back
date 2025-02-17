@@ -97,7 +97,7 @@ def cargar_datos_iniciales():
         usuario_name = os.getenv('TERMINAL_USER_NAME', 'Usuario Terminal')
         usuario_password = os.getenv('TERMINAL_USER_PASSWORD', '12345678')
         usuario_curp = os.getenv('TERMINAL_USER_CURP', 'TERMINALUSERCURP')
-        usuario_admin = os.getenv('TERMINAL_USER_ADMIN', 'False') == 'True'
+        usuario_admin = os.getenv('TERMINAL_USER_ADMIN', 'false').lower() == 'true'
 
         password_hash_terminal = bcrypt.generate_password_hash(usuario_password).decode('utf-8')
         usuario_terminal = User(
