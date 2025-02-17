@@ -210,6 +210,7 @@ def create_customer_full():
 
 # RUTA PARA OBTENER UN CUSTOMER POR SU CURP
 @customer_bp.route('/get_customer/<string:curp>', methods=['GET'])
+@jwt_required()
 def get_user(curp):
     try:
         # Buscamos al Customer por su curp (recordá que es un string)
@@ -242,11 +243,11 @@ def get_user(curp):
                 'created_at': customer.created_at.isoformat() if customer.created_at else None,
                 'updated_at': customer.updated_at.isoformat() if customer.updated_at else None,
             }
-            return jsonify(customer_data), 200
+            return jsonify({'customer_data':customer_data, 'exist':True}), 200
         else:
-            return jsonify({"error": "No se encontró un cliente con esa CURP"}), 404
+            return jsonify({"error": "No se encontró un cliente con esa CURP", 'exist':False}), 404
     except Exception as e:
-        return jsonify({"error": "El curp proporcionado no corresponde a ninguno registrado: " + str(e)}), 500
+        return jsonify({"error": "El curp proporcionado no corresponde a ninguno registrado: " + str(e), 'exist':False}), 500
     
 
 # 1. Ruta para chequear existencia del Customer:
