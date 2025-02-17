@@ -106,7 +106,10 @@ def create_customer_full():
         # Buscar si ya existe un Customer con ese curp
         customer = Customer.query.filter_by(curp=curp).first()
 
+        # Seteando una variable que guarde si es una actualizacion o si es nuevo
+        proceso = ""
         if not customer:
+            proceso = "creado"
             # Crear nuevo Customer
             customer = Customer(
                 curp = curp,
@@ -138,6 +141,7 @@ def create_customer_full():
             db.session.add(customer)
             message = "Customer creado con éxito."
         else:
+            proceso = "actualizado"
             # Actualizar Customer existente: se actualizan los campos si se mandan en el request
             customer.name            = data.get('name', customer.name)
             customer.lastname_f      = data.get('lastname_f', customer.lastname_f)
@@ -196,7 +200,8 @@ def create_customer_full():
 
         return jsonify({
             "message": message,
-            "customer": updated_customer
+            "customer": updated_customer,
+            "proceso": proceso
         }), 200
 
     except Exception as e:
