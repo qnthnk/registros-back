@@ -33,7 +33,6 @@ class Customer(db.Model):
     url_image_card_front = db.Column(db.String, nullable=True)
     url_image_card_back = db.Column(db.String, nullable=True)
     tel_num = db.Column(db.String, nullable=True)
-    admin = db.Column(db.Boolean, default=False)
     comment = db.Column(db.String, nullable=True)
     state = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
