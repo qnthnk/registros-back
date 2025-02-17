@@ -91,41 +91,79 @@ def create_customer_minimal():
         return jsonify({"error": "Error al crear el Customer: " + str(e)}), 500
 
 
-# 2. Ruta para actualizar un Customer existente ( para admin )
-@customer_bp.route('/update_customer', methods=['PUT'])
-def update_customer():
+# 2. Crear un customer nuevo y / o actualizarlo.
+@customer_bp.route('/create_customer', methods=['POST'])
+@jwt_required()
+def create_customer_full():
     try:
         data = request.json
+
+        # Campo obligatorio
         curp = data.get('curp')
         if not curp:
-            return jsonify({"error": "El campo 'curp' es obligatorio para identificar al Customer."}), 400
+            return jsonify({"error": "El campo 'curp' es obligatorio."}), 400
 
-        # Buscar el Customer existente por curp
+        # Buscar si ya existe un Customer con ese curp
         customer = Customer.query.filter_by(curp=curp).first()
-        if not customer:
-            return jsonify({"error": "No existe un Customer con ese curp."}), 404
 
-        # Actualizar campos (si se pasan en el request, sino se mantienen los previos)
-        customer.name            = data.get('name', customer.name)
-        customer.lastname_f      = data.get('lastname_f', customer.lastname_f)
-        customer.lastname_m      = data.get('lastname_m', customer.lastname_m)
-        customer.entidad_nac     = data.get('entidad_nac', customer.entidad_nac)
-        customer.municipio_nac   = data.get('municipio_nac', customer.municipio_nac)
-        customer.org             = data.get('org', customer.org)
-        customer.address_street  = data.get('address_street', customer.address_street)
-        customer.address_number  = data.get('address_number', customer.address_number)
-        customer.colonia         = data.get('colonia', customer.colonia)
-        customer.postal_code     = data.get('postal_code', customer.postal_code)
-        customer.localidad       = data.get('localidad', customer.localidad)
-        customer.entidad_dir     = data.get('entidad_dir', customer.entidad_dir)
-        customer.municipio_dir   = data.get('municipio_dir', customer.municipio_dir)
-        customer.email           = data.get('email', customer.email)
-        customer.cell_num        = data.get('cell_num', customer.cell_num)
-        customer.instagram       = data.get('instagram', customer.instagram)
-        customer.facebook        = data.get('facebook', customer.facebook)
-        customer.tel_num         = data.get('tel_num', customer.tel_num)
-        customer.comment         = data.get('comment', customer.comment)
-        customer.state           = data.get('state', customer.state)
+        if not customer:
+            # Crear nuevo Customer
+            customer = Customer(
+                curp = curp,
+                name = data.get('name'),
+                lastname_f = data.get('lastname_f'),
+                lastname_m = data.get('lastname_m'),
+                entidad_nac = data.get('entidad_nac'),
+                municipio_nac = data.get('municipio_nac'),
+                org = data.get('org'),
+                address_street = data.get('address_street'),
+                address_number = data.get('address_number'),
+                colonia = data.get('colonia'),
+                postal_code = data.get('postal_code'),
+                localidad = data.get('localidad'),
+                entidad_dir = data.get('entidad_dir'),
+                municipio_dir = data.get('municipio_dir'),
+                email = data.get('email'),
+                cell_num = data.get('cell_num'),
+                instagram = data.get('instagram'),
+                facebook = data.get('facebook'),
+                password_hash = data.get('password_hash'),
+                url_image_self_photo = data.get('url_image_self_photo'),
+                url_image_card_front = data.get('url_image_card_front'),
+                url_image_card_back = data.get('url_image_card_back'),
+                tel_num = data.get('tel_num'),
+                comment = data.get('comment'),
+                state = data.get('state', True)
+            )
+            db.session.add(customer)
+            message = "Customer creado con éxito."
+        else:
+            # Actualizar Customer existente: se actualizan los campos si se mandan en el request
+            customer.name            = data.get('name', customer.name)
+            customer.lastname_f      = data.get('lastname_f', customer.lastname_f)
+            customer.lastname_m      = data.get('lastname_m', customer.lastname_m)
+            customer.entidad_nac     = data.get('entidad_nac', customer.entidad_nac)
+            customer.municipio_nac   = data.get('municipio_nac', customer.municipio_nac)
+            customer.org             = data.get('org', customer.org)
+            customer.address_street  = data.get('address_street', customer.address_street)
+            customer.address_number  = data.get('address_number', customer.address_number)
+            customer.colonia         = data.get('colonia', customer.colonia)
+            customer.postal_code     = data.get('postal_code', customer.postal_code)
+            customer.localidad       = data.get('localidad', customer.localidad)
+            customer.entidad_dir     = data.get('entidad_dir', customer.entidad_dir)
+            customer.municipio_dir   = data.get('municipio_dir', customer.municipio_dir)
+            customer.email           = data.get('email', customer.email)
+            customer.cell_num        = data.get('cell_num', customer.cell_num)
+            customer.instagram       = data.get('instagram', customer.instagram)
+            customer.facebook        = data.get('facebook', customer.facebook)
+            customer.password_hash   = data.get('password_hash', customer.password_hash)
+            customer.url_image_self_photo = data.get('url_image_self_photo', customer.url_image_self_photo)
+            customer.url_image_card_front = data.get('url_image_card_front', customer.url_image_card_front)
+            customer.url_image_card_back = data.get('url_image_card_back', customer.url_image_card_back)
+            customer.tel_num         = data.get('tel_num', customer.tel_num)
+            customer.comment         = data.get('comment', customer.comment)
+            customer.state           = data.get('state', customer.state)
+            message = "Customer actualizado con éxito."
 
         db.session.commit()
 
@@ -157,14 +195,13 @@ def update_customer():
         }
 
         return jsonify({
-            "message": "Customer actualizado con éxito.",
+            "message": message,
             "customer": updated_customer
         }), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": "Error al actualizar el Customer: " + str(e)}), 500
-    
+        return jsonify({"error": "Error al crear/actualizar el Customer: " + str(e)}), 500
 
 # RUTA PARA OBTENER UN CUSTOMER POR SU CURP
 @customer_bp.route('/get_customer/<string:curp>', methods=['GET'])
