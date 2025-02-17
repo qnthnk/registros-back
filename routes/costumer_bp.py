@@ -236,7 +236,6 @@ def get_user(curp):
                 'instagram': customer.instagram,
                 'facebook': customer.facebook,
                 'tel_num': customer.tel_num,
-                'admin': customer.admin,
                 'comment': customer.comment,
                 'state': customer.state,
                 'created_at': customer.created_at.isoformat() if customer.created_at else None,
