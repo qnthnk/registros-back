@@ -122,7 +122,6 @@ def create_user():
 
 # ELIMINAR USUARIO
 @admin_bp.route('/users/<string:id>', methods=['DELETE'])
-@jwt_required()
 def delete_user(id):
     user = User.query.get(id)
 
