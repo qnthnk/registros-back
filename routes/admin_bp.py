@@ -120,6 +120,24 @@ def create_user():
         db.session.rollback()
         return jsonify({'error': 'Error en la creación del usuario: ' + str(e), 'success':False}), 500
 
+# ELIMINAR USUARIO
+@admin_bp.route('/users/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(id):
+    user = User.query.get(id)
+
+    if not user:
+        return jsonify({'msg': 'Usuario no encontrado', 'success': False}), 404
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'msg': 'Usuario eliminado', 'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'msg': 'Error al eliminar el usuario', 'success': False}), 500
+
+
 # LOGIN (CON TOKEN)
 @admin_bp.route('/login', methods=['POST'])
 def get_token():
