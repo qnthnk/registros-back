@@ -85,7 +85,9 @@ def cargar_datos_iniciales():
 
         # Crear una Terminal usando el id del usuario responsable
         terminal_address = os.getenv('TERMINAL_ADDRESS', 'Dirección de Terminal por defecto')
+        terminal_name = os.getenv('TERMINAL_NAME', 'Nombre de Terminal por defecto')
         nueva_terminal = Terminal(
+            name=terminal_name,
             responsible_id=responsable.id,
             address=terminal_address
         )

@@ -112,6 +112,7 @@ def list_terminals():
         for t in terminals:
             terminal_list.append({
                 "id": t.id,
+                "name": t.name,
                 "responsible_id": t.responsible_id,
                 "address": t.address,
                 "created_at": t.created_at.isoformat() if t.created_at else None,

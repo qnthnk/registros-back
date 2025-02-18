@@ -57,6 +57,7 @@ class User(db.Model):
 class Terminal(db.Model):
     __tablename__ = "terminal"
     id = db.Column(db.String, primary_key=True, default=generate_uuid)
+    name = db.Column(db.String, unique=True, nullable=False)
     responsible_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=False)
     address = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
