@@ -112,12 +112,13 @@ def create_user():
                 'curp': new_user.curp,
                 'admin': new_user.admin,
                 'terminal_id': new_user.terminal_id
-            }
+            },
+            'success':True
         }), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Error en la creación del usuario: ' + str(e)}), 500
+        return jsonify({'error': 'Error en la creación del usuario: ' + str(e), 'success':False}), 500
 
 # LOGIN (CON TOKEN)
 @admin_bp.route('/login', methods=['POST'])
