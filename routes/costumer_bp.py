@@ -392,3 +392,44 @@ def customer_login():
 
     except Exception as e:
         return jsonify({"error": "Error en el login del Customer: " + str(e)}), 500
+    
+
+@customer_bp.route('/users-list', methods=['GET'])
+def get_customers_list():
+    try:
+        customers = Customer.query.all()
+        customers_list = [
+            {
+                "id": customer.id,
+                "name": customer.name,
+                "lastname_f": customer.lastname_f,
+                "lastname_m": customer.lastname_m,
+                "curp": customer.curp,
+                "entidad_nac": customer.entidad_nac,
+                "municipio_nac": customer.municipio_nac,
+                "org": customer.org,
+                "address_street": customer.address_street,
+                "address_number": customer.address_number,
+                "colonia": customer.colonia,
+                "postal_code": customer.postal_code,
+                "localidad": customer.localidad,
+                "entidad_dir": customer.entidad_dir,
+                "municipio_dir": customer.municipio_dir,
+                "email": customer.email,
+                "cell_num": customer.cell_num,
+                "instagram": customer.instagram,
+                "facebook": customer.facebook,
+                "url_image_self_photo": customer.url_image_self_photo,
+                "url_image_card_front": customer.url_image_card_front,
+                "url_image_card_back": customer.url_image_card_back,
+                "tel_num": customer.tel_num,
+                "comment": customer.comment,
+                "state": customer.state,
+                "created_at": customer.created_at.isoformat() if customer.created_at else None,
+                "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
+            }
+            for customer in customers
+        ]
+        return jsonify({"list": customers_list}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error al obtener la lista de clientes: {str(e)}"}), 500
