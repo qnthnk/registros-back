@@ -199,8 +199,8 @@ def update_profile():
         curp = request.json.get('curp')
         terminal_id = request.json.get('terminal_id')  # Opcional
 
-        if not email or not password or not name or not curp:
-            return jsonify({"error": "Email, password, name y curp son obligatorios"}), 400
+        if not email or not name or not curp:
+            return jsonify({"error": "Email, terminal, name y curp son obligatorios"}), 400
         
         # Validar la existencia del terminal_id. Si no existe, lo dejamos como None.
         if terminal_id:
@@ -225,26 +225,3 @@ def update_profile():
 
  
 # RUTA PARA ACTUALIZAR EL ESTADO ADMIN DE UN USUARIO
-@admin_bp.route('/update_admin', methods=['PUT'])
-def update_admin():
-    email = request.json.get('email')
-    admin_value = request.json.get('admin')  # Aunque no se utiliza, se valida que venga
-    if email is None or admin_value is None:
-        return jsonify({"error": "El email y la situación admin son obligatorios"}), 400
-
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({"error": "Usuario no encontrado"}), 404
-
-    # Togleamos (invertimos) el estado actual
-    user.admin = not user.admin
-
-    try:
-        db.session.commit()
-        return jsonify({
-            "message": f"Estado admin de {email} ahora es {'admin' if user.admin else 'no admin'}",
-            "admin": user.admin
-        }), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Error al actualizar el estado admin: {str(e)}"}), 500
