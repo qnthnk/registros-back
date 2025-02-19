@@ -215,7 +215,9 @@ def update_profile():
         user.name = name
         user.curp = curp
         user.terminal_id = terminal_id
-        user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        if password != "":
+            user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+            
         db.session.commit()
         return jsonify({"message": "Usuario actualizado con éxito"}), 200
 
