@@ -218,9 +218,8 @@ def update_profile():
         if password and password.strip() != "":
             user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-
         db.session.commit()
-        return jsonify({"message": "Usuario actualizado con éxito"}), 200
+        return jsonify({"message": "Usuario actualizado con éxito."}), 200
 
     except Exception as e:
         db.session.rollback()
