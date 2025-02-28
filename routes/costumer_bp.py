@@ -459,12 +459,15 @@ def delete_customer(customer_id):
 @customer_bp.route('/get_registers_list', methods=['GET'])
 def get_registers_list():
     try:
+        logger.info("Iniciando generación del Excel")
         # Consultar todos los registros de Customer
         customers = Customer.query.all()
+        logger.info("Registros obtenidos: %s", len(customers))
+        
         # Convertir los registros a una lista de diccionarios, convirtiendo las fechas a string
         data = []
         for c in customers:
-            data.append({
+            customer_data = {
                 'id': c.id,
                 'name': c.name,
                 'lastname_f': c.lastname_f,
@@ -489,14 +492,19 @@ def get_registers_list():
                 'state': c.state,
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
-            })
+            }
+            data.append(customer_data)
+        logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data))
         
         # Generar un DataFrame y escribirlo a un archivo Excel en memoria
         df = pd.DataFrame(data)
+        logger.info("DataFrame generado con shape: %s", df.shape)
+        
         output = BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='Customers')
         output.seek(0)
+        logger.info("Excel generado en memoria, enviando archivo")
         
         return send_file(
             output, 
@@ -505,5 +513,5 @@ def get_registers_list():
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
     except Exception as e:
-        print("Error generating Excel:", e)
+        logger.exception("Error generando el Excel")
         return jsonify({'error': 'Error al generar el Excel.'}), 500
