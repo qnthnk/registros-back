@@ -508,7 +508,7 @@ def get_registers_list():
         
         return send_file(
             output, 
-            attachment_filename="clientes.xlsx", 
+            download_name="clientes.xlsx", 
             as_attachment=True,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
