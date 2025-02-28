@@ -151,3 +151,10 @@ if __name__ == '__main__':
 
 #                 myenv\Scripts\activate       
 #                 waitress-serve --port=5000 app:app
+
+# Si cambias el repo de carpeta o renombras carpetas hay que re hacer el env e instalar las dependencias:
+
+# rm -r myenv
+# python -m venv myenv
+# myenv\Scripts\activate
+# pip install -r requirements.txt

@@ -455,3 +455,53 @@ def delete_customer(customer_id):
         db.session.rollback()
         print("Error al eliminar el cliente:", e)
         return jsonify({"msg": f"Error al eliminar el cliente: {str(e)}"}), 500
+    
+@customer_bp.route('/get_registers_list', methods=['GET'])
+def get_registers_list():
+    try:
+        # Consultar todos los registros de Customer
+        customers = Customer.query.all()
+        # Convertir los registros a una lista de diccionarios
+        data = []
+        for c in customers:
+            data.append({
+                'id': c.id,
+                'name': c.name,
+                'lastname_f': c.lastname_f,
+                'lastname_m': c.lastname_m,
+                'curp': c.curp,
+                'entidad_nac': c.entidad_nac,
+                'municipio_nac': c.municipio_nac,
+                'org': c.org,
+                'address_street': c.address_street,
+                'address_number': c.address_number,
+                'colonia': c.colonia,
+                'postal_code': c.postal_code,
+                'localidad': c.localidad,
+                'entidad_dir': c.entidad_dir,
+                'municipio_dir': c.municipio_dir,
+                'email': c.email,
+                'cell_num': c.cell_num,
+                'instagram': c.instagram,
+                'facebook': c.facebook,
+                'tel_num': c.tel_num,
+                'comment': c.comment,
+                'state': c.state,
+                'created_at': c.created_at,
+                'updated_at': c.updated_at
+            })
+        
+        # Generar un DataFrame y escribirlo a un archivo Excel en memoria
+        df = pd.DataFrame(data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Customers')
+        output.seek(0)
+        
+        return send_file(output, 
+                         attachment_filename="clientes.xlsx", 
+                         as_attachment=True,
+                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        print("Error generating Excel:", e)
+        return jsonify({'error': 'Error al generar el Excel.'}), 500
