@@ -433,3 +433,19 @@ def get_customers_list():
         return jsonify({"list": customers_list}), 200
     except Exception as e:
         return jsonify({"error": f"Error al obtener la lista de clientes: {str(e)}"}), 500
+
+
+@customer_bp.route('/delete_customer/<int:customer_id>', methods=['DELETE'])
+def delete_customer(customer_id):
+    try:
+        customer = Customer.query.get(customer_id)
+        if not customer:
+            return jsonify({"msg": "Cliente no encontrado"}), 404
+
+        db.session.delete(customer)
+        db.session.commit()
+        return jsonify({"msg": "Cliente eliminado con éxito"}), 200
+    except Exception as e:
+        db.session.rollback()
+        print("Error al eliminar el cliente:", e)
+        return jsonify({"msg": f"Error al eliminar el cliente: {str(e)}"}), 500
