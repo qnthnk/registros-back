@@ -461,7 +461,7 @@ def get_registers_list():
     try:
         # Consultar todos los registros de Customer
         customers = Customer.query.all()
-        # Convertir los registros a una lista de diccionarios
+        # Convertir los registros a una lista de diccionarios, convirtiendo las fechas a string
         data = []
         for c in customers:
             data.append({
@@ -487,8 +487,8 @@ def get_registers_list():
                 'tel_num': c.tel_num,
                 'comment': c.comment,
                 'state': c.state,
-                'created_at': c.created_at,
-                'updated_at': c.updated_at
+                'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
+                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             })
         
         # Generar un DataFrame y escribirlo a un archivo Excel en memoria
@@ -498,10 +498,12 @@ def get_registers_list():
             df.to_excel(writer, index=False, sheet_name='Customers')
         output.seek(0)
         
-        return send_file(output, 
-                         attachment_filename="clientes.xlsx", 
-                         as_attachment=True,
-                         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return send_file(
+            output, 
+            attachment_filename="clientes.xlsx", 
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
     except Exception as e:
         print("Error generating Excel:", e)
         return jsonify({'error': 'Error al generar el Excel.'}), 500
