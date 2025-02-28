@@ -435,7 +435,7 @@ def get_customers_list():
         return jsonify({"error": f"Error al obtener la lista de clientes: {str(e)}"}), 500
 
 
-@customer_bp.route('/delete_customer/<int:customer_id>', methods=['DELETE'])
+@customer_bp.route('/delete_customer/<string:customer_id>', methods=['DELETE'])
 def delete_customer(customer_id):
     try:
         customer = Customer.query.get(customer_id)
