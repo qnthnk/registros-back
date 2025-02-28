@@ -280,16 +280,21 @@ def check_customer():
 # 2. Ruta para completar (actualizar) la información del Customer existente.
 #    Esta ruta está protegida y utiliza el token (que se generó en la ruta anterior) para identificar al Customer.
 @customer_bp.route('/complete_customer', methods=['PUT'])
-@jwt_required()
 def complete_customer():
     try:
         data = request.json
-        current_customer_id = get_jwt_identity()
-        customer = Customer.query.filter_by(id=current_customer_id).first()
+
+        # Obtenemos el customer_id del payload
+        customer_id = data.get('customer_id')
+        if not customer_id:
+            return jsonify({"error": "El campo 'customer_id' es obligatorio."}), 400
+
+        # Buscamos el customer usando el customer_id recibido
+        customer = Customer.query.filter_by(id=customer_id).first()
         if not customer:
             return jsonify({"error": "Customer no encontrado."}), 404
 
-        # Actualizar los campos con los datos recibidos, pisando los previos si existen.
+        # Actualizamos los campos recibidos, manteniendo los existentes si no se mandan nuevos datos
         customer.name            = data.get('name', customer.name)
         customer.lastname_f      = data.get('lastname_f', customer.lastname_f)
         customer.lastname_m      = data.get('lastname_m', customer.lastname_m)
@@ -309,9 +314,10 @@ def complete_customer():
         customer.facebook        = data.get('facebook', customer.facebook)
         customer.tel_num         = data.get('tel_num', customer.tel_num)
         customer.comment         = data.get('comment', customer.comment)
+        # Actualizamos el state de acuerdo al payload (false para baja, true para alta)
         customer.state           = data.get('state', customer.state)
-        
-        # Si se envía una contraseña, actualizar el password_hash
+
+        # Si se envía una contraseña, actualizamos el password_hash
         password = data.get('password')
         if password:
             customer.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
