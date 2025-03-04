@@ -6,6 +6,7 @@ from flask_jwt_extended import  JWTManager
 from routes.admin_bp import admin_bp                       # Acá importamos rutas admin
 from routes.public_bp import public_bp                     # Acá importamos rutas public
 from routes.costumer_bp import customer_bp
+from routes.drive_routes_bp import drive_routes_bp
 from routes.clasifica_comentarios_individuales_bp import clasifica_comentarios_individuales_bp
 from routes.terminal_bp import terminal_bp
 from routes.transactions_bp import transactions_bp
@@ -46,6 +47,8 @@ app.register_blueprint(customer_bp, url_prefix='/')
 app.register_blueprint(terminal_bp, url_prefix='/')
 
 app.register_blueprint(transactions_bp, url_prefix='/')
+
+app.register_blueprint(drive_routes_bp, url_prefix='/')
 
 
 # DATABASE---------------
