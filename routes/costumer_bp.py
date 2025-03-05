@@ -542,6 +542,8 @@ def get_registers_list():
                 'tel_num': c.tel_num,
                 'comment': c.comment,
                 'deudor': c.deudor,
+                'url_image_self_photo': c.url_image_self_photo,
+                'created_by': c.created_by,
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             }
