@@ -96,12 +96,14 @@ def create_customer_minimal():
 @jwt_required()
 def create_customer_full():
     try:
-        data = request.json
+        data_prev = request.json
+        data = data_prev.customerData
 
         # Campo obligatorio
         curp = data.get('curp')
+
         if not curp:
-            return jsonify({"error": "El campo 'curp' es obligatorio."}), 400
+            return jsonify({"error": "El campo 'curp' y el id son obligatorios."}), 400
 
         # Buscar si ya existe un Customer con ese curp
         customer = Customer.query.filter_by(curp=curp).first()
@@ -136,7 +138,8 @@ def create_customer_full():
                 url_image_card_back = data.get('url_image_card_back'),
                 tel_num = data.get('tel_num'),
                 comment = data.get('comment'),
-                state = data.get('state', True)
+                state = data.get('state', True),
+                created_by = data_prev.creador
             )
             db.session.add(customer)
             message = "Customer creado con éxito."
@@ -167,6 +170,7 @@ def create_customer_full():
             customer.tel_num         = data.get('tel_num', customer.tel_num)
             customer.comment         = data.get('comment', customer.comment)
             customer.state           = data.get('state', customer.state)
+            customer.created_by      = data_prev.creador
             message = "Customer actualizado con éxito."
 
         db.session.commit()
@@ -195,7 +199,8 @@ def create_customer_full():
             "comment": customer.comment,
             "state": customer.state,
             "created_at": customer.created_at.isoformat() if customer.created_at else None,
-            "updated_at": customer.updated_at.isoformat() if customer.updated_at else None
+            "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
+            "created_by": customer.created_by
         }
 
         return jsonify({

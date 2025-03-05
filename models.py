@@ -37,6 +37,7 @@ class Customer(db.Model):
     state = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    created_by = db.Column(db.String, db.ForeignKey('user.id'), nullable=True)
 
 class User(db.Model):
     __tablename__ = "user"
@@ -52,7 +53,7 @@ class User(db.Model):
     terminal_id = db.Column(db.String, db.ForeignKey('terminal.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
-
+    customers = db.relationship('Customer', backref='creator', lazy=True)
 
 class Terminal(db.Model):
     __tablename__ = "terminal"
