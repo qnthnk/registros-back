@@ -97,22 +97,21 @@ def create_customer_minimal():
 def create_customer_full():
     try:
         data_prev = request.json
+        if not data_prev or "customerData" not in data_prev or "creador" not in data_prev:
+            return jsonify({"error": "Faltan claves en el JSON. Se requieren 'customerData' y 'creador'."}), 400
+
         data = data_prev["customerData"]
 
         # Campo obligatorio
         curp = data.get('curp')
-
         if not curp:
             return jsonify({"error": "El campo 'curp' y el id son obligatorios."}), 400
 
         # Buscar si ya existe un Customer con ese curp
         customer = Customer.query.filter_by(curp=curp).first()
-
-        # Seteando una variable que guarde si es una actualizacion o si es nuevo
         proceso = ""
         if not customer:
             proceso = "creado"
-            # Crear nuevo Customer
             customer = Customer(
                 curp = curp,
                 name = data.get('name'),
@@ -145,7 +144,6 @@ def create_customer_full():
             message = "Customer creado con éxito."
         else:
             proceso = "actualizado"
-            # Actualizar Customer existente: se actualizan los campos si se mandan en el request
             customer.name            = data.get('name', customer.name)
             customer.lastname_f      = data.get('lastname_f', customer.lastname_f)
             customer.lastname_m      = data.get('lastname_m', customer.lastname_m)
@@ -212,6 +210,8 @@ def create_customer_full():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Error al crear/actualizar el Customer: " + str(e)}), 500
+
+
 
 # RUTA PARA OBTENER UN CUSTOMER POR SU CURP
 @customer_bp.route('/get_customer/<string:curp>', methods=['GET'])
