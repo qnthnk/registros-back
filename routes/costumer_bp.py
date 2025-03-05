@@ -632,3 +632,69 @@ def get_registers_by_user():
     except Exception as e:
         logger.exception("Error generando el Excel por user_id")
         return jsonify({'error': 'Error al generar el Excel.'}), 500
+    
+
+@customer_bp.route('/get_customer', methods=['POST'])
+def get_customer():
+    # Se espera un JSON con las llaves: admin (bool), id (string) y curp (string)
+    data = request.get_json()
+    if not data:
+        return jsonify({"exist": False, "message": "No se proporcionó datos"}), 400
+
+    admin = data.get("admin", False)
+    user_id = data.get("id", None)
+    curp = data.get("curp", None)
+
+    if curp is None:
+        return jsonify({"exist": False, "message": "Se requiere el CURP"}), 400
+
+    if admin:
+        # Si es admin, ignoramos el id y buscamos en toda la tabla
+        customer = Customer.query.filter_by(curp=curp).first()
+        if not customer:
+            return jsonify({"exist": False, "message": "El registro no existe"}), 404
+        else:
+            return jsonify({"exist": True, "customer_data": customer_to_dict(customer)}), 200
+    else:
+        # Si no es admin, se requiere el id para filtrar
+        if not user_id:
+            return jsonify({"exist": False, "message": "Falta el id de búsqueda"}), 400
+
+        customer = Customer.query.filter_by(curp=curp, created_by=user_id).first()
+        if not customer:
+            return jsonify({"exist": False, "message": "No se encontró registro para el usuario actual"}), 404
+        else:
+            return jsonify({"exist": True, "customer_data": customer_to_dict(customer)}), 200
+
+def customer_to_dict(customer):
+    return {
+        "id": customer.id,
+        "name": customer.name,
+        "lastname_f": customer.lastname_f,
+        "lastname_m": customer.lastname_m,
+        "curp": customer.curp,
+        "entidad_nac": customer.entidad_nac,
+        "municipio_nac": customer.municipio_nac,
+        "org": customer.org,
+        "address_street": customer.address_street,
+        "address_number": customer.address_number,
+        "colonia": customer.colonia,
+        "postal_code": customer.postal_code,
+        "localidad": customer.localidad,
+        "entidad_dir": customer.entidad_dir,
+        "municipio_dir": customer.municipio_dir,
+        "email": customer.email,
+        "cell_num": customer.cell_num,
+        "instagram": customer.instagram,
+        "facebook": customer.facebook,
+        "password_hash": customer.password_hash,
+        "url_image_self_photo": customer.url_image_self_photo,
+        "url_image_card_front": customer.url_image_card_front,
+        "url_image_card_back": customer.url_image_card_back,
+        "tel_num": customer.tel_num,
+        "comment": customer.comment,
+        "deudor": customer.deudor,
+        "created_at": customer.created_at,
+        "updated_at": customer.updated_at,
+        "created_by": customer.created_by
+    }
