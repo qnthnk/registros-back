@@ -463,6 +463,7 @@ def get_customers_list_by_user():
                 "lastname_f": customer.lastname_f,
                 "lastname_m": customer.lastname_m,
                 "curp": customer.curp,
+                "deudor": customer.deudor,
                 "entidad_nac": customer.entidad_nac,
                 "municipio_nac": customer.municipio_nac,
                 "org": customer.org,
