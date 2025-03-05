@@ -1,7 +1,7 @@
 from flask import Blueprint, send_file, make_response, request, jsonify, render_template, current_app, Response # Blueprint para modularizar y relacionar con app
 from flask_bcrypt import Bcrypt                                  # Bcrypt para encriptación
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity   # Jwt para tokens
-from models import Customer                                      # importar tabla "Customer" de models
+from models import Customer , User                               # importar tabla "Customer" de models
 from database import db                                          # importa la db desde database.py
 from datetime import timedelta                                   # importa tiempo especifico para rendimiento de token válido
 from logging_config import logger                                # logger.info("console log que se ve en render")
@@ -519,6 +519,11 @@ def get_registers_list():
         # Convertir los registros a una lista de diccionarios, convirtiendo las fechas a string
         data = []
         for c in customers:
+            # Obtenemos el usuario asociado usando el id de c.created_by
+            user = User.query.get(c.created_by)
+            # Usamos el email o el nombre, según prefieras (en este ejemplo, email)
+            user_info = user.email if user else c.created_by
+            
             customer_data = {
                 'id': c.id,
                 'name': c.name,
@@ -540,11 +545,11 @@ def get_registers_list():
                 'tel_num': c.tel_num,
                 'deudor': c.deudor,
                 'url_image_self_photo': c.url_image_self_photo,
-                'created_by': c.created_by,
+                'created_by': user_info,  # Guardamos el email o el nombre del usuario
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             }
-            data.append(customer_data)
+        data.append(customer_data)
         logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data))
         
         # Generar un DataFrame y escribirlo a un archivo Excel en memoria
