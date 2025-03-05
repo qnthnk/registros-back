@@ -520,3 +520,67 @@ def get_registers_list():
     except Exception as e:
         logger.exception("Error generando el Excel")
         return jsonify({'error': 'Error al generar el Excel.'}), 500
+    
+
+@customer_bp.route('/get_registers_by_user', methods=['POST'])
+def get_registers_by_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Falta user_id en el cuerpo JSON.'}), 400
+
+        logger.info("Generando Excel para user_id: %s", user_id)
+        # Filtramos los customers creados por ese user
+        customers = Customer.query.filter_by(created_by=user_id).all()
+        logger.info("Registros obtenidos: %s", len(customers))
+
+        # Convertir cada registro a diccionario
+        data_list = []
+        for c in customers:
+            customer_data = {
+                'id': c.id,
+                'name': c.name,
+                'lastname_f': c.lastname_f,
+                'lastname_m': c.lastname_m,
+                'curp': c.curp,
+                'entidad_nac': c.entidad_nac,
+                'municipio_nac': c.municipio_nac,
+                'org': c.org,
+                'address_street': c.address_street,
+                'address_number': c.address_number,
+                'colonia': c.colonia,
+                'postal_code': c.postal_code,
+                'localidad': c.localidad,
+                'entidad_dir': c.entidad_dir,
+                'municipio_dir': c.municipio_dir,
+                'email': c.email,
+                'cell_num': c.cell_num,
+                'instagram': c.instagram,
+                'facebook': c.facebook,
+                'tel_num': c.tel_num,
+                'comment': c.comment,
+                'state': c.state,
+                'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
+                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
+            }
+            data_list.append(customer_data)
+        logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data_list))
+
+        # Generar Excel en memoria
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df = pd.DataFrame(data_list)
+            df.to_excel(writer, index=False, sheet_name='Customers')
+        output.seek(0)
+        logger.info("Excel generado en memoria, enviando archivo")
+
+        return send_file(
+            output,
+            download_name="clientes_por_usuario.xlsx",
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        logger.exception("Error generando el Excel por user_id")
+        return jsonify({'error': 'Error al generar el Excel.'}), 500
