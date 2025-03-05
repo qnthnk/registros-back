@@ -137,7 +137,7 @@ def create_customer_full():
                 url_image_card_back = data.get('url_image_card_back'),
                 tel_num = data.get('tel_num'),
                 comment = data.get('comment'),
-                state = data.get('state', True),
+                deudor = data.get('deudor', True),
                 created_by = data_prev["creador"]
             )
             db.session.add(customer)
@@ -167,7 +167,7 @@ def create_customer_full():
             customer.url_image_card_back = data.get('url_image_card_back', customer.url_image_card_back)
             customer.tel_num         = data.get('tel_num', customer.tel_num)
             customer.comment         = data.get('comment', customer.comment)
-            customer.state           = data.get('state', customer.state)
+            customer.deudor           = data.get('deudor', customer.deudor)
             customer.created_by      = data_prev["creador"]
             message = "Customer actualizado con éxito."
 
@@ -195,7 +195,7 @@ def create_customer_full():
             "facebook": customer.facebook,
             "tel_num": customer.tel_num,
             "comment": customer.comment,
-            "state": customer.state,
+            "deudor": customer.deudor,
             "created_at": customer.created_at.isoformat() if customer.created_at else None,
             "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
             "created_by": customer.created_by
@@ -242,7 +242,7 @@ def get_user(curp):
                 'facebook': customer.facebook,
                 'tel_num': customer.tel_num,
                 'comment': customer.comment,
-                'state': customer.state,
+                'deudor': customer.deudor,
                 'created_at': customer.created_at.isoformat() if customer.created_at else None,
                 'updated_at': customer.updated_at.isoformat() if customer.updated_at else None,
             }
@@ -319,8 +319,8 @@ def complete_customer():
         customer.facebook        = data.get('facebook', customer.facebook)
         customer.tel_num         = data.get('tel_num', customer.tel_num)
         customer.comment         = data.get('comment', customer.comment)
-        # Actualizamos el state de acuerdo al payload (false para baja, true para alta)
-        customer.state           = data.get('state', customer.state)
+        # Actualizamos el deudor de acuerdo al payload (false para baja, true para alta)
+        customer.deudor           = data.get('deudor', customer.deudor)
 
         # Si se envía una contraseña, actualizamos el password_hash
         password = data.get('password')
@@ -351,7 +351,7 @@ def complete_customer():
             "facebook": customer.facebook,
             "tel_num": customer.tel_num,
             "comment": customer.comment,
-            "state": customer.state,
+            "deudor": customer.deudor,
             "created_at": customer.created_at.isoformat() if customer.created_at else None,
             "updated_at": customer.updated_at.isoformat() if customer.updated_at else None
         }
@@ -435,7 +435,7 @@ def get_customers_list():
                 "url_image_card_back": customer.url_image_card_back,
                 "tel_num": customer.tel_num,
                 "comment": customer.comment,
-                "state": customer.state,
+                "deudor": customer.deudor,
                 "created_at": customer.created_at.isoformat() if customer.created_at else None,
                 "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
             }
@@ -494,7 +494,7 @@ def get_registers_list():
                 'facebook': c.facebook,
                 'tel_num': c.tel_num,
                 'comment': c.comment,
-                'state': c.state,
+                'deudor': c.deudor,
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             }
@@ -561,7 +561,7 @@ def get_registers_by_user():
                 'facebook': c.facebook,
                 'tel_num': c.tel_num,
                 'comment': c.comment,
-                'state': c.state,
+                'deudor': c.deudor,
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             }

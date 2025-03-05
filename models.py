@@ -34,7 +34,7 @@ class Customer(db.Model):
     url_image_card_back = db.Column(db.String, nullable=True)
     tel_num = db.Column(db.String, nullable=True)
     comment = db.Column(db.String, nullable=True)
-    state = db.Column(db.Boolean, default=True)
+    deudor = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     created_by = db.Column(db.String, db.ForeignKey('user.id'), nullable=True)
