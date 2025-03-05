@@ -549,7 +549,7 @@ def get_registers_list():
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
                 'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
             }
-        data.append(customer_data)
+            data.append(customer_data)  # Mover adentro del ciclo
         logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data))
         
         # Generar un DataFrame y escribirlo a un archivo Excel en memoria
@@ -571,6 +571,7 @@ def get_registers_list():
     except Exception as e:
         logger.exception("Error generando el Excel")
         return jsonify({'error': 'Error al generar el Excel.'}), 500
+
     
 
 @customer_bp.route('/get_registers_by_user', methods=['POST'])
