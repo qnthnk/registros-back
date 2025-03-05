@@ -97,7 +97,7 @@ def create_customer_minimal():
 def create_customer_full():
     try:
         data_prev = request.json
-        data = data_prev.customerData
+        data = data_prev["customerData"]
 
         # Campo obligatorio
         curp = data.get('curp')
@@ -139,7 +139,7 @@ def create_customer_full():
                 tel_num = data.get('tel_num'),
                 comment = data.get('comment'),
                 state = data.get('state', True),
-                created_by = data_prev.creador
+                created_by = data_prev["creador"]
             )
             db.session.add(customer)
             message = "Customer creado con éxito."
@@ -170,7 +170,7 @@ def create_customer_full():
             customer.tel_num         = data.get('tel_num', customer.tel_num)
             customer.comment         = data.get('comment', customer.comment)
             customer.state           = data.get('state', customer.state)
-            customer.created_by      = data_prev.creador
+            customer.created_by      = data_prev["creador"]
             message = "Customer actualizado con éxito."
 
         db.session.commit()
