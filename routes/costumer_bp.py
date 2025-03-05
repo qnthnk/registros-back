@@ -36,7 +36,7 @@ def authorize():
     if request.method == 'OPTIONS':
         return
     # En la lista de este if agregamos las rutas que no querramos restringir si no tienen el API_KEY embutido en Authorization en HEADERS.
-    if request.path in ['/get_registers_by_user','/create_customer','/get_user/<string:curp>','/update_customer','/create_customer_minimal','/test_customer_bp']:
+    if request.path in ['/users-list-by-user','/get_registers_by_user','/create_customer','/get_user/<string:curp>','/update_customer','/create_customer_minimal','/test_customer_bp']:
         return
     api_key = request.headers.get('Authorization')
     if not api_key or not check_api_key(api_key):
@@ -447,6 +447,7 @@ def get_customers_list():
 
 
 @customer_bp.route('/users-list-by-user', methods=['POST'])
+@jwt_required()
 def get_customers_list_by_user():
     try:
         data = request.get_json()
