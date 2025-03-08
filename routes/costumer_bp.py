@@ -547,7 +547,8 @@ def get_registers_list():
                 'url_image_self_photo': c.url_image_self_photo,
                 'created_by': user_info,  # Guardamos el email o el nombre del usuario
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
-                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
+                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else "",
+                'valid_until': c.valid_until
             }
             data.append(customer_data)  # Mover adentro del ciclo
         logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data))
@@ -615,7 +616,8 @@ def get_registers_by_user():
                 'comment': c.comment,
                 'deudor': c.deudor,
                 'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
-                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else ""
+                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else "",
+                'valid_until': c.valid_until
             }
             data_list.append(customer_data)
         logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data_list))

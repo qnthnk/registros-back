@@ -1,5 +1,5 @@
 from database import db
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 
@@ -38,6 +38,7 @@ class Customer(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
     created_by = db.Column(db.String, db.ForeignKey('user.id'), nullable=True)
+    valid_until = db.Column(db.String, default=lambda: (datetime.today() + timedelta(days=730)).strftime("%Y-%m-%d"))
 
 class User(db.Model):
     __tablename__ = "user"
