@@ -674,6 +674,9 @@ def get_customer():
             return jsonify({"exist": True, "customer_data": customer_to_dict(customer)}), 200
 
 def customer_to_dict(customer):
+    user = User.query.get(customer.created_by)
+    created_by_value = user.email if user else customer.created_by
+
     return {
         "id": customer.id,
         "name": customer.name,
@@ -703,5 +706,5 @@ def customer_to_dict(customer):
         "deudor": customer.deudor,
         "created_at": customer.created_at,
         "updated_at": customer.updated_at,
-        "created_by": customer.created_by
+        "created_by": created_by_value
     }
