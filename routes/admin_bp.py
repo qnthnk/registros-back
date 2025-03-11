@@ -153,6 +153,7 @@ def get_token():
             expires = timedelta(hours=9)
             # Usamos el id del usuario (UUID) como identity para el token
             access_token = create_access_token(identity=login_user.id, expires_delta=expires)
+            # logger.info(f"Token identity: {login_user.id}")
             return jsonify({
                 'access_token': access_token,
                 'id': login_user.id,

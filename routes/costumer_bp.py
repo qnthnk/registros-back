@@ -13,6 +13,7 @@ from io import BytesIO                                           # Transformar a
 #imports para investigar contido de un html específico:
 import requests
 from bs4 import BeautifulSoup
+from uuid import UUID
 #------------------------------------------------------
 
 
@@ -36,7 +37,7 @@ def authorize():
     if request.method == 'OPTIONS':
         return
     # En la lista de este if agregamos las rutas que no querramos restringir si no tienen el API_KEY embutido en Authorization en HEADERS.
-    if request.path in ['/get_registers_by_user','/create_customer','/get_user/<string:curp>','/update_customer','/create_customer_minimal','/test_customer_bp']:
+    if request.path in ['/check_admin','/get_registers_by_user','/create_customer','/get_user/<string:curp>','/update_customer','/create_customer_minimal','/test_customer_bp']:
         return
     api_key = request.headers.get('Authorization')
     if not api_key or not check_api_key(api_key):
@@ -708,3 +709,30 @@ def customer_to_dict(customer):
         "updated_at": customer.updated_at,
         "created_by": created_by_value
     }
+
+@customer_bp.route('/check_admin', methods=['GET'])
+@jwt_required()
+def check_admin():
+    try:
+        # Obtené el id del usuario desde el token (como string)
+        current_user_id = get_jwt_identity()
+        # logger.info(f"Token identity: {current_user_id}")  # Para debug, sacá esto luego
+        
+        try:
+            # Convertí el string a UUID para validar, pero luego lo usamos como string para la query
+            current_user_uuid = UUID(current_user_id)
+        except ValueError:
+            return jsonify({"error": "Token inválido"}), 400
+        
+        # Si el id en la DB se guarda con guiones, usá este formato.
+        # Sino, si se guardan sin guiones, podés reemplazarlos:
+        user = User.query.filter_by(id=str(current_user_uuid)).first()
+        # Si no funciona, probá:
+        # user = User.query.filter_by(id=str(current_user_uuid).replace('-', '')).first()
+        
+        if not user:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+        
+        return jsonify({"admin": user.admin}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
