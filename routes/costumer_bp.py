@@ -508,9 +508,77 @@ def delete_customer(customer_id):
         db.session.rollback()
         print("Error al eliminar el cliente:", e)
         return jsonify({"msg": f"Error al eliminar el cliente: {str(e)}"}), 500
-    
+
+
 @customer_bp.route('/get_registers_list', methods=['GET'])
 def get_registers_list():
+    try:
+        logger.info("Iniciando generación del Excel de usuarios que pagaron")
+        # Consultar solo los registros de Customer donde deudor es False
+        customers = Customer.query.filter_by(deudor=False).all()
+        logger.info("Registros obtenidos (usuarios que pagaron): %s", len(customers))
+        
+        # Convertir los registros a una lista de diccionarios, convirtiendo las fechas a string
+        data = []
+        for c in customers:
+            # Obtenemos el usuario asociado usando el id de c.created_by
+            user = User.query.get(c.created_by)
+            # Usamos el email (o el nombre) del usuario, según prefieras
+            user_info = user.email if user else c.created_by
+            
+            customer_data = {
+                'id': c.id,
+                'name': c.name,
+                'lastname_f': c.lastname_f,
+                'lastname_m': c.lastname_m,
+                'curp': c.curp,
+                'org': c.org,
+                'address_street': c.address_street,
+                'address_number': c.address_number,
+                'colonia': c.colonia,
+                'postal_code': c.postal_code,
+                'localidad': c.localidad,
+                'entidad_dir': c.entidad_dir,
+                'municipio_dir': c.municipio_dir,
+                'email': c.email,
+                'cell_num': c.cell_num,
+                'instagram': c.instagram,
+                'facebook': c.facebook,
+                'tel_num': c.tel_num,
+                'deudor': c.deudor,
+                'url_image_self_photo': c.url_image_self_photo,
+                'created_by': user_info,  # Guardamos el email o el nombre del usuario
+                'created_at': c.created_at.strftime("%Y-%m-%d %H:%M:%S") if c.created_at else "",
+                'updated_at': c.updated_at.strftime("%Y-%m-%d %H:%M:%S") if c.updated_at else "",
+                'valid_until': c.valid_until
+            }
+            data.append(customer_data)
+        logger.info("Datos convertidos a lista de diccionarios, total: %s", len(data))
+        
+        # Generar un DataFrame y escribirlo a un archivo Excel en memoria
+        df = pd.DataFrame(data)
+        logger.info("DataFrame generado con shape: %s", df.shape)
+        
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Customers')
+        output.seek(0)
+        logger.info("Excel generado en memoria, enviando archivo")
+        
+        return send_file(
+            output, 
+            download_name="clientes.xlsx", 
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        logger.exception("Error generando el Excel")
+        return jsonify({'error': 'Error al generar el Excel.'}), 500
+
+
+
+@customer_bp.route('/get_registers_list_full', methods=['GET'])
+def get_registers_list_full():
     try:
         logger.info("Iniciando generación del Excel")
         # Consultar todos los registros de Customer
